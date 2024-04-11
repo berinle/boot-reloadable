@@ -17,12 +17,12 @@ import java.util.Properties;
 @Configuration
 public class AppConfig {
 
-    //    @Value("${credentials.key}")
-    @Value("${CREDENTIALS_KEY}")
+    @Value("${credentials.key}")
     String key;
-    //    @Value("${credentials.secret}")
-    @Value("${CREDENTIALS_SECRET}")
+    @Value("${credentials.secret}")
     String secret;
+    @Value("${credentials.session-token}")
+    String token;
 
     @Getter
     private Map<String, String> config;
@@ -46,13 +46,10 @@ public class AppConfig {
         }
 
         System.out.println("config = " + config);
-
-        System.out.println("** env key=" + System.getenv("CREDENTIALS_KEY"));
-        System.out.println("** env secret=" + System.getenv("CREDENTIALS_SECRET"));
     }
 
     @Bean
     public AppBean appBean() {
-        return new AppBean(key, secret);
+        return new AppBean(key, secret, token);
     }
 }

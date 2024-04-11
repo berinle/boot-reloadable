@@ -1,0 +1,3 @@
+credentials.key=some-key
+credentials.secret=some-secret
+credentials.session-token=some-really-long-session-token

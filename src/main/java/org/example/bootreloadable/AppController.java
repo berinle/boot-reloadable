@@ -1,5 +1,6 @@
 package org.example.bootreloadable;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.support.DefaultSingletonBeanRegistry;
@@ -13,68 +14,43 @@ import java.util.Map;
 
 // https://www.baeldung.com/spring-reinitialize-singleton-bean
 
+@Slf4j
 @RestController
 public class AppController {
+
+    private static final String ACCESS_KEY = "credentials.key";
+    private static final String SECRET_KEY = "credentials.secret";
+    private static final String TOKEN_KEY = "credentials.session-token";
 
     AppBean appBean;
     ApplicationContext ctx;
 
-//    @Value("${credentials.key}")
-    @Value("${CREDENTIALS_KEY}")
-    String key;
-//    @Value("${credentials.secret}")
-    @Value("${CREDENTIALS_SECRET}")
-    String secret;
-    private Environment environment;
-
     private AppConfig appConfig;
 
     @Autowired
-    public AppController(AppBean appBean, ApplicationContext ctx, Environment environment, AppConfig appConfig) {
+    public AppController(AppBean appBean, ApplicationContext ctx, AppConfig appConfig) {
         this.appBean = appBean;
         this.ctx = ctx;
-        this.environment = environment;
         this.appConfig = appConfig;
     }
 
-
-    @GetMapping("/magic")
-    public void magic() {
+    @GetMapping("/refresh")
+    public void refresh() {
         appConfig.reloadConfig();
 
         Map<String, String> config = appConfig.getConfig();
 
-
         DefaultSingletonBeanRegistry registry = (DefaultSingletonBeanRegistry) ctx.getAutowireCapableBeanFactory();
         registry.destroySingleton("appBean");
-        registry.registerSingleton("appBean", new AppBean(config.get("k1"), config.get("k2")));
+        registry.registerSingleton("appBean", new AppBean(config.get(ACCESS_KEY), config.get(SECRET_KEY), config.get(TOKEN_KEY)));
 
         //re-fetch bean from context
         this.appBean = (AppBean) registry.getSingleton("appBean");
-
-        System.out.println("appBean = " + appBean);
-    }
-    @GetMapping("/reinitialize")
-    public void reinitialize(@RequestParam("key") String _key, @RequestParam("secret") String _secret) {
-
-        DefaultSingletonBeanRegistry registry = (DefaultSingletonBeanRegistry) ctx.getAutowireCapableBeanFactory();
-        registry.destroySingleton("appBean");
-        registry.registerSingleton("appBean", new AppBean(_key, _secret));
-
-        //re-fetch bean from context
-        this.appBean = (AppBean) registry.getSingleton("appBean");
+        log.debug("appBean: {}", appBean);
     }
 
     @GetMapping("/ping")
     public String hello() {
-
-        System.out.println("env key= " + environment.getProperty("CREDENTIALS_KEY"));
-        System.out.println("env secret= " + environment.getProperty("CREDENTIALS_SECRET"));
-
-        System.out.println("** env key=" + System.getenv("CREDENTIALS_KEY"));
-        System.out.println("** env secret=" + System.getenv("CREDENTIALS_SECRET"));
-
-        System.out.println("appBean = " + appBean);
         return appBean.getKey() + "->" + appBean.getSecret();
     }
 }

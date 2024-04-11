@@ -12,8 +12,5 @@ import lombok.ToString;
 public class AppBean {
     private String key;
     private String secret;
-
-    public void reload() {
-
-    }
+    private String token;
 }
